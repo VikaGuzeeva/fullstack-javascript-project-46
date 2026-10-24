@@ -1,0 +1,26 @@
+{
+  "name": "@hexlet/code",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Compares two configuration files and shows a difference",
+  "bin": {
+    "gendiff": "./gendiff.js"
+  },
+  "homepage": "https://github.com/VikaGuzeeva/fullstack-javascript-project-46#readme",
+  "bugs": {
+    "url": "https://github.com/VikaGuzeeva/fullstack-javascript-project-46/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VikaGuzeeva/fullstack-javascript-project-46.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "commander": "^15.0.0"
+  }
+}
