@@ -13,16 +13,43 @@
 
 ## Установка
 
-<!-- Опишите установку: клонирование, зависимости, переменные окружения -->
-
+1. Клонируйте репозиторий:
 ```bash
 git clone https://github.com/VikaGuzeeva/fullstack-javascript-project-46.git
 cd fullstack-javascript-project-46
 ```
 
+2. Установите зависимости:
+```bash
+npm install
+```
+
 ## Использование
 
-<!-- Добавьте примеры запуска и запись asciinema — именно это смотрит работодатель -->
+Чтобы увидеть описание аргументов и опций, запустите:
+```bash
+gendiff -h
+```
+
+Для сравнения двух JSON-файлов выполните:
+```bash
+gendiff file1.json file2.json
+```
+
+Результат работы программы выглядит так:
+```text
+{
+- follow: false
+  host: hexlet.io
+- proxy: 123.234.53.22
+- timeout: 50
++ timeout: 20
++ verbose: true
+}
+```
+
+Демонстрация:
+[asciinema](https://asciinema.org/a/AQjFb9xYKFDFbrNt)
 
 ---
 

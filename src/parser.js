@@ -1,19 +1,22 @@
 import fs from 'fs';
 import path from 'path';
 
-export function parseFile(filePath) {
-  const ext = path.extname(filePath).toLowerCase();
+const getExtension = (filepath) => path.extname(filepath).toLowerCase();
+
+const readFile = (filepath) => {
+  const resolvedPath = path.resolve(process.cwd(), filepath);
+  return fs.readFileSync(resolvedPath, 'utf-8');
+};
+
+const parseJson = (content) => JSON.parse(content);
+
+export const parseFile = (filepath) => {
+  const ext = getExtension(filepath);
 
   if (ext !== '.json') {
-    throw new Error(`Unsupported file format: ${ext}`);
+    throw new Error(`Unsupported file format: ${ext}. Only .json is supported.`);
   }
 
-  // Синхронное чтение файла
-  const content = fs.readFileSync(filePath, 'utf8');
-
-  try {
-    return JSON.parse(content);
-  } catch (err) {
-    throw new Error(`Failed to parse JSON in ${filePath}: ${err.message}`);
-  }
-}
+  const content = readFile(filepath);
+  return parseJson(content);
+};
