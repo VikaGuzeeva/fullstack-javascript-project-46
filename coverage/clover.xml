@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1793165717820" clover="3.2.0">
-  <project timestamp="1793165717820" name="All files">
+<coverage generated="1793166302477" clover="3.2.0">
+  <project timestamp="1793166302477" name="All files">
     <metrics statements="19" coveredstatements="19" conditionals="6" coveredconditionals="6" methods="2" coveredmethods="2" elements="27" coveredelements="27" complexity="0" loc="19" ncloc="19" packages="1" files="1" classes="1"/>
     <file name="diff.js" path="/home/vika/fullstack-javascript-project-46/src/diff.js">
       <metrics statements="19" coveredstatements="19" conditionals="6" coveredconditionals="6" methods="2" coveredmethods="2"/>

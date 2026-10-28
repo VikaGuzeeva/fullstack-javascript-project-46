@@ -76,19 +76,19 @@ test('generateDiff: key is present in both, but the values are different', () =>
 })
 
 test('generateDiff: keys are sorted alphabetically', () => {
-  const obj1 = { z: 1, a: 2, m: 3 };
-  const obj2 = { z: 1, a: 2, m: 4 };
-  const result = generateDiff(obj1, obj2);
-  const lines = result.split('\n').slice(1, -1).map(line => line.trim());
-  const seen = new Set();
-  const uniqueKeys = [];
+  const obj1 = { z: 1, a: 2, m: 3 }
+  const obj2 = { z: 1, a: 2, m: 4 }
+  const result = generateDiff(obj1, obj2)
+  const lines = result.split('\n').slice(1, -1).map(line => line.trim())
+  const seen = new Set()
+  const uniqueKeys = []
   for (const line of lines) {
-    const keyPart = line.split(':')[0];
-    const key = keyPart.replace(/^[+-]\s*/, '').trim();
+    const keyPart = line.split(':')[0]
+    const key = keyPart.replace(/^[+-]\s*/, '').trim()
     if (!seen.has(key)) {
-      seen.add(key);
-      uniqueKeys.push(key);
+      seen.add(key)
+      uniqueKeys.push(key)
     }
   }
-  expect(uniqueKeys).toEqual(['a', 'm', 'z']);
-});
+  expect(uniqueKeys).toEqual(['a', 'm', 'z'])
+})
