@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url'
 import path, { dirname } from 'path'
 import fs from 'fs'
 import { generateDiff } from '../src/diff.js'
+import { parseFile } from '../src/parsers/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -91,4 +92,17 @@ test('generateDiff: keys are sorted alphabetically', () => {
     }
   }
   expect(uniqueKeys).toEqual(['a', 'm', 'z'])
+})
+
+test('generateDiff: comparison of yaml files', () => {
+  const filepath1 = path.join(fixtureDir, 'file1.yml')
+  const filepath2 = path.join(fixtureDir, 'file2.yml')
+  const obj1 = parseFile(filepath1)
+  const obj2 = parseFile(filepath2)
+  const result = generateDiff(obj1, obj2)
+  expect(result).toContain('- follow: false')
+  expect(result).toContain('+ verbose: true')
+  expect(result).toContain('- timeout: 50')
+  expect(result).toContain('+ timeout: 20')
+  expect(result).toContain('host: hexlet.io')
 })

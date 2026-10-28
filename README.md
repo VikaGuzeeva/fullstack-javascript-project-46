@@ -33,7 +33,12 @@ gendiff -h
 
 Для сравнения двух JSON-файлов выполните:
 ```bash
-gendiff file1.json file2.json
+gendiff __fixtures__/file1.json __fixtures__/file2.json
+```
+
+Для сравнения двух YAML-файлов выполните:
+```bash
+gendiff __fixtures__/file1.yml __fixtures__/file2.yml
 ```
 
 Результат работы программы выглядит так:
