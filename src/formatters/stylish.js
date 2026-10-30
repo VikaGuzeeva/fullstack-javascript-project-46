@@ -1,67 +1,47 @@
-import _ from 'lodash'
+const isObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value)
 
-const replacer = ' '
-const spacesCount = 4
-const indentShift = 2
+const getIndent = (depth) => ' '.repeat(depth * 4)
 
-const getIndent = (depth) => replacer.repeat(depth * spacesCount - indentShift)
-
-const stylish = (tree) => {
-  const iter = (node, depth = 1) => {
-    const currentIndent = getIndent(depth)
-
-    if (Array.isArray(node)) {
-      const lines = node.map((item) => {
-        const { type, key, value, oldValue, newValue, children } = item
-
-        switch (type) {
-          case 'added':
-            return `${currentIndent}+ ${key}: ${iter(value, depth + 1)}`
-
-          case 'removed':
-            return `${currentIndent}- ${key}: ${iter(value, depth + 1)}`
-
-          case 'changed':
-            return (
-              `${currentIndent}- ${key}: ${iter(oldValue, depth + 1)}\n` +
-              `${currentIndent}+ ${key}: ${iter(newValue, depth + 1)}`
-            )
-
-          case 'unchanged':
-            return `${currentIndent}  ${key}: ${iter(value, depth + 1)}`
-
-          case 'nested':
-            return `${currentIndent}  ${key}: {\n${
-              iter(children, depth + 1)
-                .split('\n')
-                .map((line) => `${currentIndent}  ${line}`)
-                .join('\n')
-            }\n${currentIndent}  }`
-
-          default:
-            throw new Error(`Unknown diff type: ${type}`)
-        }
-      })
-
-      return lines.join('\n')
-    }
-    if (!_.isObject(node)) {
-      return String(node)
-    }
-    const entries = Object.entries(node)
-    if (entries.length === 0) {
-      return '{}'
-    }
-
-    const innerLines = entries.map(([k, v]) => {
-      const innerIndent = getIndent(depth + 1)
-      return `${innerIndent}${k}: ${iter(v, depth + 1)}`
-    })
-
-    return `{\n${innerLines.join('\n')}\n${getIndent(depth)}}`
+const stringify = (value, depth) => {
+  if (!isObject(value)) {
+    return String(value)
   }
 
-  return iter(tree)
+  const indent = getIndent(depth)
+  const lines = Object.entries(value)
+    .map(([key, val]) => `${indent}${key}: ${stringify(val, depth + 1)}`)
+
+  return [
+    '{',
+    ...lines,
+    `${getIndent(depth - 1)}}`
+  ].join('\n')
 }
 
-export default stylish
+const formatDiff = (diff, depth = 1) => {
+  const indent = getIndent(depth)
+
+  const lines = diff.map((node) => {
+    switch (node.type) {
+      case 'added':
+        return `${indent.slice(2)}+ ${node.key}: ${stringify(node.value, depth + 1)}`
+      case 'deleted':
+        return `${indent.slice(2)}- ${node.key}: ${stringify(node.value, depth + 1)}`
+      case 'changed':
+        return [
+          `${indent.slice(2)}- ${node.key}: ${stringify(node.oldValue, depth + 1)}`,
+          `${indent.slice(2)}+ ${node.key}: ${stringify(node.newValue, depth + 1)}`
+        ].join('\n')
+      case 'unchanged':
+        return `${indent}${node.key}: ${stringify(node.value, depth + 1)}`
+      case 'nested':
+        return `${indent}${node.key}: {\n${formatDiff(node.children, depth + 1)}\n${indent}}`
+      default:
+        throw new Error(`Unknown node type: ${node.type}`)
+    }
+  })
+
+  return depth === 1 ? `{\n${lines.join('\n')}\n}` : lines.join('\n')
+}
+
+export default formatDiff

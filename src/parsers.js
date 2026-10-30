@@ -1,15 +1,24 @@
-import * as yaml from 'js-yaml'
+import fs from 'fs'
+import path from 'path'
+// Явно импортируем load из js-yaml. Это самый надежный способ.
+import { load } from 'js-yaml'
 
-const parseFile = (data, extension) => {
-  switch (extension) {
+const parse = (content, ext) => {
+  switch (ext) {
     case '.json':
-      return JSON.parse(data)
+      return JSON.parse(content)
     case '.yml':
     case '.yaml':
-      return yaml.load(data)
+      // Теперь вызываем просто load(content), без префикса yaml.
+      return load(content)
     default:
-      throw new Error(`Invalid file extension - ${extension}`)
+      throw new Error(`Unknown file extension: ${ext}`)
   }
 }
 
-export default parseFile
+export const getFileContent = (filepath) => {
+  const absolutePath = path.resolve(filepath)
+  const content = fs.readFileSync(absolutePath, 'utf8')
+  const ext = path.extname(filepath)
+  return parse(content, ext)
+}

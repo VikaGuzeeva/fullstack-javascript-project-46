@@ -1,29 +1,43 @@
-import * as fs from 'fs'
-import path from 'path'
-import parseFile from './parsers.js'
-import { generateDiff } from './diff.js'
+import { getFileContent } from './parsers.js'
 import getFormatter from './formatters/index.js'
 
-const readFile = (filepath) => fs.readFileSync(filepath, 'utf-8')
-const getFullPath = (filepath) => path.resolve(process.cwd(), filepath)
-const getExtension = (filepath) => path.extname(filepath)
+const isObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value)
 
-const genDiff = (filepath1, filepath2, formatName = 'stylish') => {
-  const readFile1 = readFile(getFullPath(filepath1))
-  const readFile2 = readFile(getFullPath(filepath2))
+const buildDiff = (obj1, obj2) => {
+  const allKeys = [...new Set([...Object.keys(obj1), ...Object.keys(obj2)])].sort()
 
-  const extensionFile1 = getExtension(filepath1)
-  const extensionFile2 = getExtension(filepath2)
+  const result = allKeys.map((key) => {
+    if (!(key in obj1)) {
+      return { key, type: 'added', value: obj2[key] }
+    }
+    if (!(key in obj2)) {
+      return { key, type: 'deleted', value: obj1[key] }
+    }
+    if (isObject(obj1[key]) && isObject(obj2[key])) {
+      return { key, type: 'nested', children: buildDiff(obj1[key], obj2[key]) }
+    }
+    if (obj1[key] !== obj2[key]) {
+      return {
+        key,
+        type: 'changed',
+        oldValue: obj1[key],
+        newValue: obj2[key]
+      }
+    }
+    return { key, type: 'unchanged', value: obj1[key] }
+  })
 
-  const parsedFile1 = parseFile(readFile1, extensionFile1) || {}
-  const parsedFile2 = parseFile(readFile2, extensionFile2) || {}
-
-  const diff = generateDiff(parsedFile1, parsedFile2)
-
-  const formatter = getFormatter(formatName)
-  const formattedDiff = formatter(diff)
-
-  return formattedDiff
+  return result
 }
 
-export { genDiff, generateDiff }
+const genDiff = (filepath1, filepath2, format = 'stylish') => {
+  // Эта функция теперь приходит из parsers.js
+  const obj1 = getFileContent(filepath1)
+  const obj2 = getFileContent(filepath2)
+
+  const diff = buildDiff(obj1, obj2)
+  const formatter = getFormatter(format)
+  return formatter(diff)
+}
+
+export default genDiff
