@@ -28,17 +28,27 @@ npm install
 
 Чтобы увидеть описание аргументов и опций, запустите:
 ```bash
-gendiff -h
+node bin/gendiff.js -h
 ```
 
 Для сравнения двух JSON-файлов выполните:
 ```bash
-gendiff __fixtures__/file1.json __fixtures__/file2.json
+node bin/gendiff.js __fixtures__/file1.json __fixtures__/file2.json
 ```
 
 Для сравнения двух YAML-файлов выполните:
 ```bash
-gendiff __fixtures__/file1.yml __fixtures__/file2.yml
+node bin/gendiff.js __fixtures__/file1.yml __fixtures__/file2.yml
+```
+Выбор формата вывода
+Plain:
+```bash
+node bin/gendiff.js --format plain __fixtures__/file1.json __fixtures__/file2.json
+```
+
+JSON:
+```bash
+node bin/gendiff.js --format json __fixtures__/file1.json __fixtures__/file2.json
 ```
 
 Результат работы программы выглядит так:
