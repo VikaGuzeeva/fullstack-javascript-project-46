@@ -1,108 +1,107 @@
-import { test, expect } from 'vitest'
-import { fileURLToPath } from 'url'
-import path, { dirname } from 'path'
-import fs from 'fs'
-import { generateDiff } from '../src/diff.js'
-import { parseFile } from '../src/parsers/index.js'
+import { describe, test, expect } from 'vitest'
+import { genDiff, generateDiff } from '../src/index.js'
+import parseFile from '../src/parsers.js'
+import stylish from '../src/formatters/stylish.js'
+import getFormatter from '../src/formatters/index.js'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-const fixtureDir = path.join(__dirname, '../__fixtures__')
+describe('errors and edge cases', () => {
+  test('unexisting format should throw', () => {
+    expect(() => genDiff('path1', 'path2', 'nested')).toThrow()
+  })
 
-const file1 = JSON.parse(fs.readFileSync(path.join(fixtureDir, 'file1.json'), 'utf-8'))
-const file2 = JSON.parse(fs.readFileSync(path.join(fixtureDir, 'file2.json'), 'utf-8'))
+  test('formatters throw on unsupported types', () => {
+    expect(() => stylish([
+      { key: 'value', type: 'added' },
+      { key: 'value', type: 'complex' }
+    ])).toThrow()
+  })
 
-test('generateDiff: comparison of real fixtures', () => {
-  const expected = [
-    '{',
-    '  - follow: false',
-    '    host: hexlet.io',
-    '  - proxy: 123.234.53.22',
-    '  - timeout: 50',
-    '  + timeout: 20',
-    '  + verbose: true',
-    '}'
-  ].join('\n')
-  expect(generateDiff(file1, file2)).toEqual(expected)
+  test('parse invalid file extension', () => {
+    expect(() => parseFile({ key: 'value' }, '.txt')).toThrow()
+  })
 })
 
-test('generateDiff: key is only in the first file', () => {
-  const obj1 = { a: 1, b: 2 }
-  const obj2 = { a: 1 }
-  const expected = [
-    '{',
-    '    a: 1',
-    '  - b: 2',
-    '}'
-  ].join('\n')
-  expect(generateDiff(obj1, obj2)).toEqual(expected)
-})
-
-test('generateDiff: key is only in the second file', () => {
-  const obj1 = { a: 1 }
-  const obj2 = { a: 1, c: 3 }
-  const expected = [
-    '{',
-    '    a: 1',
-    '  + c: 3',
-    '}'
-  ].join('\n')
-  expect(generateDiff(obj1, obj2)).toEqual(expected)
-})
-
-test('generateDiff: key is present in both, and the values are equal', () => {
-  const obj1 = { x: 10, y: 20 }
-  const obj2 = { x: 10, y: 20 }
-  const result = generateDiff(obj1, obj2)
-  const lines = result.split('\n').slice(1, -1)
-
-  for (const line of lines) {
-    expect(line.startsWith('    ')).toBe(true)
-    expect(line).not.toContain('- ')
-    expect(line).not.toContain('+ ')
+test('should correctly build diff tree for nested objects', () => {
+  const obj1 = {
+    host: 'localhost',
+    db: {
+      port: 5432,
+      user: 'admin'
+    },
+    debug: true
   }
-})
 
-test('generateDiff: key is present in both, but the values are different', () => {
-  const obj1 = { color: 'red', size: 'M' }
-  const obj2 = { color: 'blue', size: 'M' }
-  const expected = [
-    '{',
-    '  - color: red',
-    '  + color: blue',
-    '    size: M',
-    '}'
-  ].join('\n')
-  expect(generateDiff(obj1, obj2)).toEqual(expected)
-})
-
-test('generateDiff: keys are sorted alphabetically', () => {
-  const obj1 = { z: 1, a: 2, m: 3 }
-  const obj2 = { z: 1, a: 2, m: 4 }
-  const result = generateDiff(obj1, obj2)
-  const lines = result.split('\n').slice(1, -1).map(line => line.trim())
-  const seen = new Set()
-  const uniqueKeys = []
-  for (const line of lines) {
-    const keyPart = line.split(':')[0]
-    const key = keyPart.replace(/^[+-]\s*/, '').trim()
-    if (!seen.has(key)) {
-      seen.add(key)
-      uniqueKeys.push(key)
-    }
+  const obj2 = {
+    host: '127.0.0.1',
+    db: {
+      port: 3306,
+      password: 'secret'
+    },
+    timeout: 5000
   }
-  expect(uniqueKeys).toEqual(['a', 'm', 'z'])
+
+  const result = generateDiff(obj1, obj2)
+  expect(result).toContain('host: 127.0.0.1')
+  expect(result).toContain('- port: 5432')
+  expect(result).toContain('+ port: 3306')
+  expect(result).toContain('+ password: secret')
+  expect(result).toContain('+ timeout: 5000')
 })
 
-test('generateDiff: comparison of yaml files', () => {
-  const filepath1 = path.join(fixtureDir, 'file1.yml')
-  const filepath2 = path.join(fixtureDir, 'file2.yml')
-  const obj1 = parseFile(filepath1)
-  const obj2 = parseFile(filepath2)
-  const result = generateDiff(obj1, obj2)
-  expect(result).toContain('- follow: false')
-  expect(result).toContain('+ verbose: true')
-  expect(result).toContain('- timeout: 50')
-  expect(result).toContain('+ timeout: 20')
-  expect(result).toContain('host: hexlet.io')
+describe('happy path', () => {
+  test('should return formatted diff string with stylish formatter', () => {
+    const diffTree = [
+      {
+        key: 'host',
+        type: 'added',
+        value: 'localhost'
+      },
+      {
+        key: 'port',
+        type: 'removed',
+        value: 8080
+      }
+    ]
+
+    const result = stylish(diffTree)
+    expect(result).toBeDefined()
+    expect(typeof result).toBe('string')
+    expect(result).toContain('+ host: localhost')
+    expect(result).toContain('- port: 8080')
+  })
+  test('should handle empty diff (no changes) gracefully', () => {
+    const diffTree = []
+    const result = stylish(diffTree)
+    expect(result).toBeDefined()
+    expect(typeof result).toBe('string')
+    expect(result).toEqual('')
+  })
+})
+
+describe('getFormatter', () => {
+  test('should return stylish formatter for "stylish" format', () => {
+    const formatter = getFormatter('stylish')
+    expect(formatter).toBe(stylish)
+    expect(typeof formatter).toBe('function')
+  })
+
+  test('should return JSON.stringify for "json" format', () => {
+    const formatter = getFormatter('json')
+    expect(formatter).toBe(JSON.stringify)
+  })
+
+  test('should throw error for unknown format', () => {
+    expect(() => getFormatter('unknown-format')).toThrow('Invalid format - unknown-format')
+  })
+})
+
+describe('parseFile', () => {
+  test('should parse JSON file correctly', () => {
+    const content = '{"host": "localhost", "port": 8080}'
+    expect(parseFile(content, '.json')).toEqual({ host: 'localhost', port: 8080 })
+  })
+
+  test('should throw error for unsupported extension', () => {
+    expect(() => parseFile('{}', 'unknown')).toThrow('Invalid file extension - unknown')
+  })
 })

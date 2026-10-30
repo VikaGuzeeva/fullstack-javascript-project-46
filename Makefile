@@ -6,3 +6,5 @@ test-coverage:
 	npm run test-coverage
 test-watch:
 	npm run test:watch
+gendiff:
+	node bin/gendiff.js
